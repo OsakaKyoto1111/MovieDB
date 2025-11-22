@@ -135,34 +135,30 @@ class MovieTableViewCell: UITableViewCell {
         }
     }
 
-    func saveFavorite(movie: Result) {
-        let favorite = Favorite(context: context)
-        favorite.movieID = Int64(movie.id ?? 0)
-        favorite.posterPath = movie.posterPath
-        favorite.title = movie.title
-        favorite.voteAverage = movie.voteAverage ?? 0.0
+ func saveFavorite(movie: Result) {
+    let favorite = Favorite(context: context)
+    favorite.movieID = Int64(movie.id ?? 0)
+    favorite.posterPath = movie.posterPath
+    favorite.title = movie.title
+    favorite.voteAverage = movie.voteAverage ?? 0.0
 
-        do {
-            try context.save()
-        } catch {
-            print("Error saving favorite: \(error)")
+    (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
+}
+
+func deleteFavorite(movie: Result) {
+    let request: NSFetchRequest<Favorite> = Favorite.fetchRequest()
+    request.predicate = NSPredicate(format: "movieID == %d", movie.id ?? 0)
+
+    do {
+        let favorites = try context.fetch(request)
+        if let objectToDelete = favorites.first {
+            context.delete(objectToDelete)
+            (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
         }
+    } catch {
+        print("Error deleting favorite: \(error)")
     }
-
-    func deleteFavorite(movie: Result) {
-        let request: NSFetchRequest<Favorite> = Favorite.fetchRequest()
-        request.predicate = NSPredicate(format: "movieID == %d", movie.id ?? 0)
-
-        do {
-            let favorites = try context.fetch(request)
-            if let objectToDelete = favorites.first {
-                context.delete(objectToDelete)
-                try context.save()
-            }
-        } catch {
-            print("Error deleting favorite: \(error)")
-        }
-    }
+}
 
     func loadFavorite(movie: Result) {
         let request: NSFetchRequest<Favorite> = Favorite.fetchRequest()
