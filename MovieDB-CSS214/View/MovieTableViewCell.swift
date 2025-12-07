@@ -130,10 +130,24 @@ class MovieTableViewCell: UITableViewCell {
         }
 
         isFavorite.toggle()
+          animateFavorite()  
         if let method {
             method()
         }
     }
+    
+ private func animateFavorite() {
+    favoriteImage.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+
+    UIView.animate(
+        withDuration: 0.5,
+        delay: 0,
+        usingSpringWithDamping: 0.5,
+        initialSpringVelocity: 3
+    ) {
+        self.favoriteImage.transform = .identity
+    }
+}
 
  func saveFavorite(movie: Result) {
     let favorite = Favorite(context: context)

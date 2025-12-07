@@ -15,6 +15,7 @@ class ViewController: UIViewController {
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 36, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.alpha = 0
         return label
     }()
     
@@ -27,6 +28,8 @@ class ViewController: UIViewController {
         table.register(MovieTableViewCell.self, forCellReuseIdentifier: "movie")
         
         table.separatorStyle = .none
+        table.alpha = 0
+
         return table
     }()
     
@@ -36,24 +39,57 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupUI()
-        apiRequest()
+        animateTitle()
     }
 
     private func setupUI() {
         view.addSubview(movieLabel)
         view.addSubview(movieTableView)
         
-        NSLayoutConstraint.activate([
-            movieLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            movieLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            movieLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            
-            movieTableView.topAnchor.constraint(equalTo: movieLabel.bottomAnchor, constant: 20),
-            movieTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            movieTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            movieTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
+        movieLabel.snp.makeConstraints { make in
+            make.center.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        movieTableView.snp.makeConstraints { make in
+            make.top.equalTo(movieLabel.snp.bottom).offset(20)
+            make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
+            make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
+        }
     }
+    
+       private func animateTitle() {
+        UIView.animate(withDuration: 1) {
+            self.movieLabel.alpha = 1
+        } completion: { _ in
+            
+            UIView.animate(withDuration: 0.3) {
+                self.movieLabel.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+            } completion: { _ in
+                
+                UIView.animate(
+                    withDuration: 1,
+                    delay: 0.1,
+                    usingSpringWithDamping: 0.7,
+                    initialSpringVelocity: 1
+                ) {
+                    self.movieLabel.snp.remakeConstraints { make in
+                        make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
+                        make.centerX.equalTo(self.view.safeAreaLayoutGuide)
+                    }
+                    
+                    self.view.layoutIfNeeded()
+                    self.movieLabel.transform = CGAffineTransform(scaleX: 1, y: 1)
+                } completion: { _ in
+                    self.apiRequest()
+                    UIView.animate(withDuration: 0.5) {
+                        self.movieTableView.alpha = 1
+                    }
+                }
+            }
+        }
+    }
+
     
     func apiRequest() {
         NetworkManager.shared.loadMovie { result in
